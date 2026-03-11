@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard – DateiBox</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #0d0f14;
+            --surface: #161920;
+            --surface2: #1c1f28;
+            --border: #252830;
+            --accent: #5b8cff;
+            --accent2: #a78bfa;
+            --green: #34d399;
+            --red: #f87171;
+            --yellow: #fbbf24;
+            --text: #e8eaf0;
+            --muted: #6b7080;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            min-height: 100vh;
+        }
+
+        .bg-grid {
+            position: fixed; inset: 0; z-index: 0;
+            background-image:
+                linear-gradient(rgba(91,140,255,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(91,140,255,0.02) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+        }
+
+        nav {
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(13,15,20,0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 32px;
+            display: flex; align-items: center; justify-content: space-between;
+            height: 60px;
+        }
+
+        .logo {
+            font-family: 'Syne', sans-serif;
+            font-size: 20px;
+            font-weight: 800;
+        }
+        .logo span { color: var(--accent); }
+
+        .nav-right { display: flex; align-items: center; gap: 16px; }
+        .user-badge {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+        .user-badge strong { color: var(--text); }
+
+        .logout-btn {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            transition: color 0.2s, background 0.2s;
+        }
+        .logout-btn:hover { color: var(--red); background: rgba(248,113,113,0.08); }
+
+        .main { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
+
+        .flash-box {
+            background: rgba(52,211,153,0.1);
+            border: 1px solid rgba(52,211,153,0.3);
+            color: var(--green);
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        /* Upload Card */
+        .upload-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .section-title .icon { font-size: 20px; }
+
+        .upload-row {
+            display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;
+        }
+
+        .file-input-wrap {
+            flex: 1; min-width: 200px;
+        }
+        .file-input-wrap label {
+            display: block;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        input[type="file"] {
+            width: 100%;
+            background: var(--bg);
+            border: 1px dashed var(--border);
+            border-radius: 10px;
+            padding: 12px 14px;
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+        input[type="file"]:hover { border-color: var(--accent); }
+
+        .toggle-wrap {
+            display: flex; align-items: center; gap: 10px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 16px;
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+            transition: border-color 0.2s;
+        }
+        .toggle-wrap:hover { border-color: var(--accent2); }
+        .toggle-wrap input { width: auto; padding: 0; border: none; background: none; cursor: pointer; }
+        .toggle-wrap span { font-size: 14px; color: var(--muted); }
+
+        .upload-btn {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 13px 24px;
+            font-family: 'Syne', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+        .upload-btn:hover { opacity: 0.9; }
+        .upload-btn:active { transform: scale(0.98); }
+
+        /* File Grid */
+        .grid-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .count-badge {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .files-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 14px;
+            margin-bottom: 48px;
+        }
+
+        .file-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 18px;
+            transition: border-color 0.2s, transform 0.2s;
+            animation: fadeIn 0.3s ease;
+        }
+        .file-card:hover { border-color: rgba(91,140,255,0.3); transform: translateY(-2px); }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .file-icon {
+            width: 44px; height: 44px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px;
+            margin-bottom: 12px;
+        }
+
+        .file-name {
+            font-size: 14px;
+            font-weight: 500;
+            word-break: break-all;
+            margin-bottom: 6px;
+            line-height: 1.4;
+        }
+
+        .file-meta {
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 14px;
+        }
+
+        .file-actions {
+            display: flex; gap: 8px; flex-wrap: wrap;
+        }
+
+        .btn {
+            font-size: 12px;
+            font-weight: 500;
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 1px solid transparent;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex; align-items: center; gap: 5px;
+            transition: all 0.15s;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .btn-download {
+            background: rgba(91,140,255,0.1);
+            border-color: rgba(91,140,255,0.3);
+            color: var(--accent);
+        }
+        .btn-download:hover { background: rgba(91,140,255,0.2); }
+
+        .btn-share-on {
+            background: rgba(52,211,153,0.1);
+            border-color: rgba(52,211,153,0.3);
+            color: var(--green);
+        }
+        .btn-share-on:hover { background: rgba(52,211,153,0.2); }
+
+        .btn-share-off {
+            background: rgba(107,112,128,0.1);
+            border-color: var(--border);
+            color: var(--muted);
+        }
+        .btn-share-off:hover { border-color: var(--green); color: var(--green); }
+
+        .btn-delete {
+            background: rgba(248,113,113,0.08);
+            border-color: rgba(248,113,113,0.2);
+            color: var(--red);
+        }
+        .btn-delete:hover { background: rgba(248,113,113,0.15); }
+
+        .empty-state {
+            text-align: center;
+            padding: 48px;
+            color: var(--muted);
+            border: 1px dashed var(--border);
+            border-radius: 16px;
+        }
+        .empty-state .emoji { font-size: 40px; margin-bottom: 12px; }
+        .empty-state p { font-size: 14px; }
+
+        .shared-owner {
+            font-size: 11px;
+            background: rgba(167,139,250,0.1);
+            border: 1px solid rgba(167,139,250,0.25);
+            color: var(--accent2);
+            border-radius: 6px;
+            padding: 2px 8px;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="bg-grid"></div>
+
+<nav>
+    <div class="logo">Datei<span>Box</span></div>
+    <div class="nav-right">
+        <div class="user-badge">👤 <strong>{{ user }}</strong></div>
+        <a href="/logout" class="logout-btn">Abmelden</a>
+    </div>
+</nav>
+
+<div class="main">
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for msg in messages %}
+                <div class="flash-box">✓ {{ msg }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Upload -->
+    <div class="upload-card">
+        <div class="section-title"><span class="icon">⬆</span> Datei hochladen</div>
+        <form method="POST" action="/upload" enctype="multipart/form-data">
+            <div class="upload-row">
+                <div class="file-input-wrap">
+                    <label>Datei auswählen (max. 500 MB)</label>
+                    <input type="file" name="file" required>
+                </div>
+                <label class="toggle-wrap">
+                    <input type="checkbox" name="shared">
+                    <span>🔗 Mit anderen teilen</span>
+                </label>
+                <button type="submit" class="upload-btn">Hochladen ↑</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Meine Dateien -->
+    <div class="grid-header">
+        <div class="section-title" style="margin-bottom:0"><span class="icon">🔒</span> Meine Dateien</div>
+        <div class="count-badge">{{ my_files|length }} Datei(en)</div>
+    </div>
+
+    {% if my_files %}
+    <div class="files-grid">
+        {% for file in my_files %}
+        <div class="file-card">
+            <div class="file-icon" style="background: rgba(91,140,255,0.1);">
+                {% set ext = file.original_name.split('.')[-1].lower() %}
+                {% if ext in ['jpg','jpeg','png','gif','webp','svg'] %}🖼
+                {% elif ext in ['pdf'] %}📄
+                {% elif ext in ['mp4','mov','avi','mkv'] %}🎬
+                {% elif ext in ['mp3','wav','ogg'] %}🎵
+                {% elif ext in ['zip','rar','7z','tar'] %}📦
+                {% elif ext in ['doc','docx'] %}📝
+                {% elif ext in ['xls','xlsx'] %}📊
+                {% elif ext in ['py','js','html','css','json'] %}💻
+                {% else %}📁{% endif %}
+            </div>
+            <div class="file-name">{{ file.original_name }}</div>
+            <div class="file-meta">{{ file.size | format_size }} · {{ file.uploaded_at[:10] }}</div>
+            <div class="file-actions">
+                <a href="/download/{{ file.id }}" class="btn btn-download">⬇ Download</a>
+                <a href="/toggle_share/{{ file.id }}" class="btn {% if file.shared %}btn-share-on{% else %}btn-share-off{% endif %}">
+                    {% if file.shared %}🔗 Geteilt{% else %}🔒 Privat{% endif %}
+                </a>
+                <a href="/delete/{{ file.id }}" class="btn btn-delete" onclick="return confirm('Wirklich löschen?')">🗑</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state" style="margin-bottom:40px">
+        <div class="emoji">📂</div>
+        <p>Noch keine Dateien hochgeladen</p>
+    </div>
+    {% endif %}
+
+    <!-- Geteilte Dateien -->
+    <div class="grid-header">
+        <div class="section-title" style="margin-bottom:0"><span class="icon">🔗</span> Von anderen geteilt</div>
+        <div class="count-badge">{{ shared_files|length }} Datei(en)</div>
+    </div>
+
+    {% if shared_files %}
+    <div class="files-grid">
+        {% for file in shared_files %}
+        <div class="file-card">
+            <div class="file-icon" style="background: rgba(167,139,250,0.1);">
+                {% set ext = file.original_name.split('.')[-1].lower() %}
+                {% if ext in ['jpg','jpeg','png','gif','webp','svg'] %}🖼
+                {% elif ext in ['pdf'] %}📄
+                {% elif ext in ['mp4','mov','avi','mkv'] %}🎬
+                {% elif ext in ['mp3','wav','ogg'] %}🎵
+                {% elif ext in ['zip','rar','7z','tar'] %}📦
+                {% elif ext in ['doc','docx'] %}📝
+                {% elif ext in ['xls','xlsx'] %}📊
+                {% elif ext in ['py','js','html','css','json'] %}💻
+                {% else %}📁{% endif %}
+            </div>
+            <div class="shared-owner">von {{ file.owner }}</div>
+            <div class="file-name">{{ file.original_name }}</div>
+            <div class="file-meta">{{ file.size | format_size }} · {{ file.uploaded_at[:10] }}</div>
+            <div class="file-actions">
+                <a href="/download/{{ file.id }}" class="btn btn-download">⬇ Download</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="emoji">🤝</div>
+        <p>Noch keine Dateien von anderen geteilt</p>
+    </div>
+    {% endif %}
+</div>
+</body>
+</html>
